@@ -1,6 +1,6 @@
 .section .data
 
-.equ RCGC_GPIO_R, 0x400FE000
+.equ RCGC_GPIO_R, 0x400FE608
 .equ RCGC_GPIO_PORT_A, 0x01
 .equ RCGC_GPIO_PORT_B, 0x02
 .equ RCGC_GPIO_PORT_C, 0x04
@@ -8,11 +8,20 @@
 .equ RCGC_GPIO_PORT_E, 0x10
 .equ RCGC_GPIO_PORT_F, 0x20
 
+.equ GPIO_PORT_F_DATA_R, 0x400253FC
+.equ GPIO_PORT_F_DEN_R,  0x4002551C
+.equ GPIO_PORT_F_DIR_R,  0x40025400
+.equ GPIO_PORT_F_PUR_R,  0x40025510
+
 .equ PIN0, 0x01
+.equ LED_GREEN, 0x08
+.equ LED_BLUE, 0x04
 .equ PIN1, 0x02
+.equ LED_RED, 0x02
 .equ PIN2, 0x04
 .equ PIN3, 0x08
 .equ PIN4, 0x10
+.equ BUTTON, 0x10
 .equ PIN5, 0x20
 .equ PIN6, 0x40
 .equ PIN7, 0x80
@@ -22,11 +31,142 @@
 .global main
 .align
 
-main:   
-LDR r0, =RCGC_GPIO_R
-LDR r1, [r0]
-MOV r3. #PIN5
-ORR r2, r1, r3
-STR r1, [r0]
+rot_an:
+    LDR r0, =GPIO_PORT_F_DATA_R
+    LDR r1, [r0]
+    MOV r3, #LED_GREEN
+    BIC r1, r1, r3
+    STR r1, [r0]
+
+    LDR r0, =GPIO_PORT_F_DATA_R
+    LDR r1, [r0]
+    MOV r3, #LED_RED
+    ORR r1, r1, r3
+    STR r1, [r0]
+    LSR r7, r7, #1
+    cmp r7, #0
+    BEQ setmaximum
+    b delay
+
+gruen_an:
+    LDR r0, =GPIO_PORT_F_DATA_R
+    LDR r1, [r0]
+    MOV r3, #LED_GREEN
+    ORR r1, r1, r3
+    STR r1, [r0]
+
+    LDR r0, =GPIO_PORT_F_DATA_R
+    LDR r1, [r0]
+    MOV r3, #LED_RED
+    BIC r1, r1, r3
+    STR r1, [r0]
+    LSL r7, r7, #1
+    
+    b delay
+
+
+
+
+
+delay:
+    LDR r6, =24000
+    delay_loop:
+        SUB r6, r6, #1
+        cmp r6, #0
+        BNE delay_loop
+    B loop
+
+
+main:
+    LDR R0, =RCGC_GPIO_R
+    LDR r1, [r0]
+    MOV r3, #PIN5
+    ORR r1, r1, r3
+    STR r1, [r0]
+
+    // rote LED konfigurieren
+
+    LDR r0, =GPIO_PORT_F_DIR_R
+    LDR r1, [r0]
+    MOV r3, #LED_RED
+    ORR r1, r1, r3
+    STR r1, [r0]
+
+    LDR r0, =GPIO_PORT_F_PUR_R
+    LDR r1, [r0]
+    MOV r3, #LED_RED
+    BIC r1, r1, r3
+    STR r1, [r0]
+
+    LDR r0, =GPIO_PORT_F_DEN_R
+    LDR r1, [r0]
+    MOV r3, #LED_RED
+    ORR r1, r1, r3
+    STR r1, [r0]
+
+
+    // grüne LED Konfigurieren
+    LDR r0, =GPIO_PORT_F_DIR_R
+    LDR r1, [r0]
+    MOV r3, #LED_GREEN
+    ORR r1, r1, r3
+    STR r1, [r0]
+
+    LDR r0, =GPIO_PORT_F_PUR_R
+    LDR r1, [r0]
+    MOV r3, #LED_GREEN
+    BIC r1, r1, r3
+    STR r1, [r0]
+
+    LDR r0, =GPIO_PORT_F_DEN_R
+    LDR r1, [r0]
+    MOV r3, #LED_GREEN
+    ORR r1, r1, r3
+    STR r1, [r0]
+
+    // Button konfigurieren
+    LDR r0, =GPIO_PORT_F_DIR_R
+    LDR r1, [r0]
+    MOV r3, #BUTTON
+    BIC r1, r1, r3
+    STR r1, [r0]
+
+    LDR r0, =GPIO_PORT_F_PUR_R
+    LDR r1, [r0]
+    MOV r3, #BUTTON
+    ORR r1, r1, r3
+    STR r1, [r0]
+
+    LDR r0, =GPIO_PORT_F_DEN_R
+    LDR r1, [r0]
+    MOV r3, #BUTTON
+    ORR r1, r1, r3
+    STR r1, [r0]
+
+
+    mov r7, #1
+
+
+
+
+
+
+loop:
+    LDR r0, =GPIO_PORT_F_DATA_R
+    LDR r1, [r0]
+    LDR r2, =BUTTON
+    AND r1, r1, r2
+    CMP r1, r2
+
+    BEQ rot_an
+    BNE gruen_an
+    B delay
+    B loop
+
+
+setmaximum:
+    mov r7, #0b10000000000000000000000000000000
+    b delay
 
 .end
+
