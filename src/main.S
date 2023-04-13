@@ -31,6 +31,8 @@
 .global main
 .align
 
+
+
 rot_an:
     LDR r0, =GPIO_PORT_F_DATA_R
     LDR r1, [r0]
@@ -44,9 +46,8 @@ rot_an:
     ORR r1, r1, r3
     STR r1, [r0]
     LSR r7, r7, #1
-    cmp r7, #0
+    cmp r7, #1
     BEQ setmaximum
-    b delay
 
 gruen_an:
     LDR r0, =GPIO_PORT_F_DATA_R
@@ -61,12 +62,9 @@ gruen_an:
     BIC r1, r1, r3
     STR r1, [r0]
     LSL r7, r7, #1
-    
-    b delay
-
-
-
-
+    LDR r5, =2147483648
+    cmp r7, r5
+    BEQ setminimum
 
 delay:
     LDR r6, =24000
@@ -85,7 +83,6 @@ main:
     STR r1, [r0]
 
     // rote LED konfigurieren
-
     LDR r0, =GPIO_PORT_F_DIR_R
     LDR r1, [r0]
     MOV r3, #LED_RED
@@ -148,9 +145,6 @@ main:
 
 
 
-
-
-
 loop:
     LDR r0, =GPIO_PORT_F_DATA_R
     LDR r1, [r0]
@@ -165,8 +159,10 @@ loop:
 
 
 setmaximum:
-    mov r7, #0b10000000000000000000000000000000
-    b delay
+    ldr r7, =0x80000000
+    B delay
 
-.end
 
+setminimum:
+    ldr r7, =1
+    B delay
