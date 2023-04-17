@@ -173,3 +173,7 @@ setmaximum:
 setminimum:
     ldr r7, =1
     B delay
+
+
+// Funktion mit bl und und dann zurück mit bx
+// Switch case mit mehreren Vergleichen und eigenen Sprungmarken
