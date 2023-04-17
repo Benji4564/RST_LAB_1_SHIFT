@@ -33,39 +33,46 @@
 
 
 
-rot_an:
-    LDR r0, =GPIO_PORT_F_DATA_R
-    LDR r1, [r0]
-    MOV r3, #LED_GREEN
-    BIC r1, r1, r3
-    STR r1, [r0]
-
+nicht_betätigt:
+//setzt die grüne LED auf an
     LDR r0, =GPIO_PORT_F_DATA_R
     LDR r1, [r0]
     MOV r3, #LED_RED
+    BIC r1, r1, r3
+    STR r1, [r0]
+//setzt die rote LED auf aus
+    LDR r0, =GPIO_PORT_F_DATA_R
+    LDR r1, [r0]
+    MOV r3, #LED_GREEN
     ORR r1, r1, r3
     STR r1, [r0]
-    LSR r7, r7, #1
     cmp r7, #1
     BEQ setmaximum
+    LSR r7, r7, #1
 
-gruen_an:
-    LDR r0, =GPIO_PORT_F_DATA_R
-    LDR r1, [r0]
-    MOV r3, #LED_GREEN
-    ORR r1, r1, r3
-    STR r1, [r0]
+    B delay
 
+betätigt:
+// setzt die rote LED auf an
     LDR r0, =GPIO_PORT_F_DATA_R
     LDR r1, [r0]
     MOV r3, #LED_RED
+    ORR r1, r1, r3
+    STR r1, [r0]
+// setzt die grüne LED auf  aus
+    LDR r0, =GPIO_PORT_F_DATA_R
+    LDR r1, [r0]
+    MOV r3, #LED_GREEN
     BIC r1, r1, r3
     STR r1, [r0]
-    LSL r7, r7, #1
-    LDR r5, =2147483648
+    LDR r5, =0x80000000
     cmp r7, r5
     BEQ setminimum
+    LSL r7, r7, #1
 
+    B delay
+
+// delay, das durch subtrahieren und aufrufen der Funktion erzeugt wird
 delay:
     LDR r6, =24000
     delay_loop:
@@ -141,7 +148,7 @@ main:
     STR r1, [r0]
 
 
-    mov r7, #1
+    ldr r7, =1
 
 
 
@@ -152,17 +159,17 @@ loop:
     AND r1, r1, r2
     CMP r1, r2
 
-    BEQ rot_an
-    BNE gruen_an
+    BEQ nicht_betätigt
+    BNE betätigt
     B delay
     B loop
 
-
+//setzt r7 auf den maximalen Wert
 setmaximum:
     ldr r7, =0x80000000
     B delay
 
-
+//setzt r7 auf den minimalen Wert
 setminimum:
     ldr r7, =1
     B delay
